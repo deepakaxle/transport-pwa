@@ -1,18 +1,15 @@
 // sw.js — GitHub Pages friendly PWA SW
 const CACHE_NAME = "transport-cache-v2"; // bump when you change this file
+const CACHE_NAME = "transport-cache-v2";
 const URLS_TO_CACHE = [
   "./",
   "./index.html",
   "./offline.html",
   "./styles/app.css",
   "./scripts/app.js",
-  "./scripts/config.js",       // if you added the VF switcher
-  "./assets/choices.min.css",
-  "./assets/choices.min.js",
-  "./manifest.webmanifest",
-  "./assets/icons/icon-192.png",
-  "./assets/icons/icon-512.png"
+  "./manifest.webmanifest"
 ];
+
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(URLS_TO_CACHE)));
