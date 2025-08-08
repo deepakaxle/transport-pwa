@@ -1,17 +1,64 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Axle Transport (PWA seed)</title>
-  <link rel="stylesheet" href="styles/app.css" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Transport Form (Offline)</title>
+
+<!-- PWA meta -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#141414">
+
+<!-- Styles -->
+<link rel="stylesheet" href="styles/app.css">
+<link rel="stylesheet" href="assets/choices.min.css">
+
+<style>
+/* Paste your dark theme styles from VF here */
+</style>
 </head>
+
 <body>
-  <main class="wrap">
-    <h1>Axle Transport (PWA seed)</h1>
-    <p id="net-status">Checking network…</p>
-    <p>If you can see this on your public URL, we’re good.</p>
-  </main>
-  <script src="scripts/app.js"></script>
+<header class="status-bar">
+  <span id="net-status">…</span>
+</header>
+
+<!-- ==== START: Your VF form markup ==== -->
+<div id="ticket-vf" class="tab-content" style="padding: 75px 20px; background-color: #1A1A1A; color: #fff; display:block;">
+  <div class="actions-main-wrap">
+    <div class="actions-card">
+
+      <div class="section-label">Axle Workforce Information</div>
+
+      <div class="form-field">
+        <label class="form-label" for="workforce">Workforce <span class="required-star">*</span></label>
+        <select class="form-select" id="workforce"></select>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="driver">Driver <span class="required-star">*</span></label>
+        <select class="form-select" id="driver"></select>
+      </div>
+
+      <!-- Paste all other form fields, dropdowns, comments area etc. here -->
+      <!-- Keep EXACT same IDs as VF -->
+      <!-- Keep hidden inputs too -->
+
+      <button id="saveTicketBtn" class="axle-btn" type="button">Save</button>
+
+    </div>
+  </div>
+</div>
+<!-- ==== END: Your VF form markup ==== -->
+
+<!-- Scripts -->
+<script src="assets/choices.min.js"></script>
+<script type="module" src="scripts/app.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js");
+}
+</script>
+
 </body>
 </html>
