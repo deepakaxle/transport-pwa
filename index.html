@@ -1,64 +1,330 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Transport Form (Offline)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Transport Form (Offline)</title>
 
-<!-- PWA meta -->
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#141414">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#141414" />
 
-<!-- Styles -->
-<link rel="stylesheet" href="styles/app.css">
-<link rel="stylesheet" href="assets/choices.min.css">
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/app.css" />
+  <link rel="stylesheet" href="assets/choices.min.css" />
 
-<style>
-/* Paste your dark theme styles from VF here */
-</style>
+  <style>
+/* ===== Your dark theme from VF (unchanged) ===== */
+#ticket-vf { background: #141414; color: #fff; font-family: 'SF Pro', Arial, sans-serif; font-size: 17px; min-height: 100vh; height: 100%; }
+#ticket-vf .actions-main-wrap { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 6px; background: #141414; padding-bottom: 100px; }
+#ticket-vf .actions-card { background: #1a1a1a; border-radius: 22px; box-shadow: 0 3px 18px 0 rgba(20,20,20,0.13); padding: 38px 24px 28px 24px; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 480px; margin-top: 32px; overflow: visible; }
+#ticket-vf .header-bar { width: 100%; text-align: center; color: #fff; font-size: 2rem; font-weight: bold; margin-bottom: 24px; letter-spacing: 1px; }
+#ticket-vf .section-label { color: #ededed; font-size: 1.15rem; font-weight: 700; margin: 19px 0 10px 0; letter-spacing: .03em; text-transform: uppercase; }
+#ticket-vf .form-field { margin-bottom: 21px; width: 100%; display: flex; flex-direction: column; align-items: stretch; }
+#ticket-vf .form-label { font-size: 1rem; color: #b5b5b5; font-weight: 700; margin-bottom: 7px; display: block; letter-spacing: .01em; }
+#ticket-vf .required-star { color: #FF5F15; margin-left: 3px; font-size: 1.11em; }
+#ticket-vf .form-input, #ticket-vf .form-select { width: 100%; font-size: 1.08rem; padding: 13px 12px 13px 13px; border-radius: 8px; border: 1.7px solid #dbdbdb; outline: none; background: #fff; color: #232323; font-family: inherit; transition: border-color 0.16s, box-shadow 0.18s; box-sizing: border-box; box-shadow: 0 1.5px 10px 0 rgba(30,30,30,0.06); }
+#ticket-vf .form-input:focus, #ticket-vf .form-select:focus { border-color: #FF5F15; box-shadow: 0 0 0 2px #FF5F1518; }
+#ticket-vf .form-select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background: #fff url('data:image/svg+xml;utf8,<svg fill="black" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 14px center/18px 18px; padding-right: 42px; cursor: pointer; }
+#ticket-vf .axle-row { display: flex; flex-wrap: nowrap; gap: 6px; margin-bottom: 10px; width: 100%; justify-content: space-between; }
+#ticket-vf .axle-btn { background: #242424; color: #fff; border: 1.2px solid #393939; border-radius: 7px; font-size: 0.97rem; font-weight: 700; padding: 11px 0; min-width: 0; width: 18%; max-width: 100px; text-align: center; cursor: pointer; transition: border-color 0.13s, background 0.14s, color 0.14s; flex: 1 1 0; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; outline: none; }
+#ticket-vf .axle-btn.active, #ticket-vf .axle-btn:focus { background: #FF5F15; color: #fff; border-color: #FF5F15; }
+#ticket-vf .toggle-row { display: flex; margin-bottom: 14px; margin-top: 7px; width: 100%; gap: 0; }
+#ticket-vf .toggle-btn { flex: 1 1 0; padding: 14px 0; background: #fff; color: #232323; font-weight: 700; font-size: 1.08rem; border: none; outline: none; border-radius: 7px 0 0 7px; cursor: pointer; border: 1.8px solid #dbdbdb; border-right: none; transition: background 0.14s, color 0.14s, border-color 0.13s; }
+#ticket-vf .toggle-btn.active, #ticket-vf .toggle-btn:focus { background: #232323; color: #fff; border-color: #FF5F15; }
+#ticket-vf .toggle-btn:hover { background: #F7F7F7; color: #232323; border-color: #aaa; }
+#ticket-vf .toggle-btn:last-child { border-radius: 0 7px 7px 0; border-right: 1.8px solid #dbdbdb; border-left: none; background: #fff; color: #232323; }
+#ticket-vf .paper-extra { animation: fadeIn 0.4s; margin-top: 8px; margin-bottom: 8px; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:translateY(0);} }
+#ticket-vf .form-comments { margin-top: 25px; width: 100%; }
+#ticket-vf .comments-label { color: #b5b5b5; font-size: 1rem; font-weight: 700; margin-bottom: 7px; display: block; }
+#ticket-vf .comments-area { width: 100%; background: #fff; color: #232323; border: 1.7px solid #dbdbdb; border-radius: 8px; padding: 13px; font-size: 1.08rem; font-family: inherit; resize: vertical; min-height: 54px; transition: border-color 0.18s, box-shadow 0.18s; margin-bottom: 0; box-sizing: border-box; }
+#ticket-vf .comments-area:focus { border-color: #FF5F15; outline: none; }
+@media (max-width: 700px) { #ticket-vf .actions-main-wrap { padding-bottom: 160px; } #ticket-vf .header-bar { font-size: 1.5rem; } #ticket-vf .section-label { font-size: 1rem; } #ticket-vf .form-label { font-size: 0.9rem; } #ticket-vf .form-input, #ticket-vf .form-select { font-size: 1rem; padding: 12px; } #ticket-vf .axle-btn { width: 30%; font-size: 0.9rem; padding: 10px; } #ticket-vf .toggle-btn { font-size: 1rem; } }
+@media (max-width: 400px) { #ticket-vf .actions-main-wrap { padding-bottom: 200px; } #ticket-vf .header-bar { font-size: 1.2rem; } #ticket-vf .section-label { font-size: 0.9rem; } #ticket-vf .form-label { font-size: 0.85rem; } #ticket-vf .form-input, #ticket-vf .form-select { font-size: 0.9rem; padding: 10px; } #ticket-vf .axle-btn { width: 45%; } #ticket-vf .comments-area { font-size: 1rem; } }
+#electronicTicketNum, #electronicTicketNum:disabled, #electronicTicketNum[disabled] { pointer-events: none !important; background: #eee !important; color: #aaa !important; opacity: 0.8 !important; border-color: #ddd !important; }
+#saveTicketBtn { display: inline-block; }
+.toggle-btn.active { border: 2.5px solid #FF5F15 !important; background: #232323 !important; color: #fff !important; font-weight: 700; z-index: 2; position: relative; transition: border-color 0.18s, background 0.18s, color 0.18s; }
+#ticket-vf .form-input, #ticket-vf .form-select, #ticket-vf .comments-area { background: #1f1f1f !important; color: #fff !important; border: 1.4px solid #444 !important; box-shadow: none !important; font-size: 1rem !important; font-weight: 500 !important; }
+#ticket-vf .form-input:focus, #ticket-vf .form-select:focus, #ticket-vf .comments-area:focus { border-color: #FF5F15 !important; box-shadow: 0 0 0 2px rgba(255, 95, 21, 0.2) !important; }
+#ticket-vf .form-select { background: #1f1f1f url('data:image/svg+xml;utf8,<svg fill="white" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 14px center/18px 18px !important; padding-right: 42px !important; }
+#ticket-vf .form-label { color: #e0e0e0 !important; font-size: 0.95rem !important; font-weight: 600 !important; }
+#ticket-vf input, #ticket-vf select, #ticket-vf textarea { border: 2px solid #444 !important; transition: border-color 0.36s cubic-bezier(.4,0,.2,1) !important; outline: none !important; }
+#ticket-vf input.typing, #ticket-vf select.typing, #ticket-vf textarea.typing { border-color: #FF5F15 !important; }
+#ticket-vf input.finished, #ticket-vf select.finished, #ticket-vf textarea.finished { border-color: #ffe76b !important; }
+#ticket-vf input.saved, #ticket-vf select.saved, #ticket-vf textarea.saved { border-color: #60ef94 !important; }
+/* Custom Dropdowns */
+.custom-dropdown { position: relative; width: 100%; max-width: 440px; }
+.custom-dropdown-display { width: 100%; padding: 13px; background: #1f1f1f; color: #fff; border: 1.4px solid #444; border-radius: 8px; font-size: 1rem; cursor: pointer; user-select: none; transition: border-color 0.2s; box-sizing: border-box; display:flex; align-items:center; justify-content:space-between; padding-right:8px; }
+.custom-dropdown-list { display: none; position: absolute; left: 0; top: 100%; width: 100%; max-height: 210px; overflow-y: auto; background: #232323; border: 1.4px solid #444; border-top: none; border-radius: 0 0 10px 10px; z-index: 99; box-shadow: 0 3px 18px 0 rgba(20,20,20,0.19); box-sizing: border-box; }
+.custom-dropdown-list.show { display: block; }
+.custom-dropdown-search { width: 100%; padding: 10px 13px; background: #232323; color: #fff; border: none; border-bottom: 1.2px solid #393939; font-size: 1rem; outline: none; margin: 0; border-radius: 0; box-sizing: border-box; }
+.custom-dropdown-option { padding: 12px 13px; cursor: pointer; color: #fff; border-bottom: 1px solid #292929; transition: background 0.15s; font-size: 1rem; white-space: normal; }
+.custom-dropdown-option:last-child { border-bottom: none; }
+.custom-dropdown-option:hover, .custom-dropdown-option.active { background: #FF5F15; color: #fff; }
+.location-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clear-selection, .clear-selection-dest { font-size: 18px; color: #ccc; cursor: pointer; margin-left: 8px; flex-shrink: 0; line-height: 1; }
+.clear-selection:hover, .clear-selection-dest:hover { color: #fff; }
+  </style>
 </head>
 
 <body>
-<header class="status-bar">
-  <span id="net-status">…</span>
-</header>
+  <header class="status-bar" style="padding:10px; background:#111;">
+    <span id="net-status">…</span>
+  </header>
 
-<!-- ==== START: Your VF form markup ==== -->
-<div id="ticket-vf" class="tab-content" style="padding: 75px 20px; background-color: #1A1A1A; color: #fff; display:block;">
-  <div class="actions-main-wrap">
-    <div class="actions-card">
+  <!-- ===== START: Your VF Form (HTML-only) ===== -->
+  <div id="ticket-vf" class="tab-content" style="padding: 75px 20px; background-color: #1A1A1A; color: #fff; display:block;">
+    <div class="actions-main-wrap">
+      <div class="actions-card">
 
-      <div class="section-label">Axle Workforce Information</div>
+        <div class="section-label">Axle Workforce Information</div>
 
-      <div class="form-field">
-        <label class="form-label" for="workforce">Workforce <span class="required-star">*</span></label>
-        <select class="form-select" id="workforce"></select>
+        <div class="form-field">
+          <label class="form-label" for="workforce">Workforce <span class="required-star">*</span></label>
+          <select class="form-select" id="workforce" disabled="disabled"></select>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="driver">Driver <span class="required-star">*</span></label>
+          <select class="form-select" id="driver" disabled="disabled"></select>
+        </div>
+
+        <!-- Power Unit -->
+        <div class="form-field">
+          <label class="form-label" for="powerUnitDisplay">Power Unit #</label>
+          <div class="custom-dropdown" id="powerUnitDropdown">
+            <div class="custom-dropdown-display" tabindex="0" id="powerUnitDisplay">-- Select Power Unit --</div>
+            <div class="custom-dropdown-list" id="powerUnitDropdownList">
+              <input type="text" class="custom-dropdown-search" placeholder="Type to filter..." />
+              <div class="custom-dropdown-options"></div>
+            </div>
+            <input type="hidden" id="powerUnit" name="powerUnit" value="" />
+          </div>
+          <span class="field-saved-indicator">✅ Saved</span>
+        </div>
+
+        <!-- Trailer Unit -->
+        <div class="form-field">
+          <label class="form-label" for="trailerUnitDisplay">Trailer Unit #</label>
+          <div class="custom-dropdown" id="trailerUnitDropdown">
+            <div class="custom-dropdown-display" tabindex="0" id="trailerUnitDisplay">-- Select Trailer Unit --</div>
+            <div class="custom-dropdown-list" id="trailerUnitDropdownList">
+              <input type="text" class="custom-dropdown-search" placeholder="Type to filter..." />
+              <div class="custom-dropdown-options"></div>
+            </div>
+            <input type="hidden" id="trailerUnit" name="trailerUnit" value="" />
+          </div>
+          <span class="field-saved-indicator">✅ Saved</span>
+        </div>
+
+        <!-- Secondary Trailer Unit -->
+        <div class="form-field">
+          <label class="form-label" for="secondaryTrailerUnitDisplay">Secondary Trailer Unit #</label>
+          <div class="custom-dropdown" id="secondaryTrailerUnitDropdown">
+            <div class="custom-dropdown-display" tabindex="0" id="secondaryTrailerUnitDisplay">-- Select Secondary Trailer Unit --</div>
+            <div class="custom-dropdown-list" id="secondaryTrailerUnitDropdownList">
+              <input type="text" class="custom-dropdown-search" placeholder="Type to filter..." />
+              <div class="custom-dropdown-options"></div>
+            </div>
+            <input type="hidden" id="secondaryTrailerUnit" name="secondaryTrailerUnit" value="" />
+          </div>
+          <span class="field-saved-indicator">✅ Saved</span>
+        </div>
+
+        <div class="axle-row">
+          <button class="axle-btn" type="button">2 Axle</button>
+          <button class="axle-btn" type="button">4 Axle</button>
+          <button class="axle-btn" type="button">6 Axle</button>
+          <button class="axle-btn" type="button">7 Axle</button>
+          <button class="axle-btn" type="button">8 Axle</button>
+        </div>
+
+        <div class="section-label" style="margin-top:22px;">Transport Information</div>
+
+        <div class="form-field">
+          <label class="form-label" for="date">Ticket Date <span class="required-star">*</span></label>
+          <input class="form-input" id="date" type="date"/>
+        </div>
+
+        <div class="toggle-row">
+          <button class="toggle-btn active" type="button" data-type="electronic">Electronic Ticket</button>
+          <button class="toggle-btn" type="button" data-type="paper">Paper Ticket</button>
+        </div>
+
+        <div id="electronicExtraBox" class="electronic-extra" style="width: 100%;">
+          <div class="form-field">
+            <label class="form-label" for="electronicTicketNum">Electronic Ticket # <span class="required-star">*</span></label>
+            <select class="form-select" id="electronicTicketNum">
+              <option value="">-- Select Electronic Ticket --</option>
+            </select>
+            <span class="field-saved-indicator">✅ Saved</span>
+          </div>
+        </div>
+
+        <div id="paperExtraBox" class="paper-extra" style="width: 100%; display:none;">
+          <div class="form-field">
+            <label class="form-label" for="paperTicketNum">Paper Ticket # <span class="required-star">*</span></label>
+            <input class="form-input" id="paperTicketNum" type="text" placeholder="Enter Paper Ticket #" />
+            <span class="field-saved-indicator">✅ Saved</span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="transportType">Transport Type</label>
+          <select class="form-select" id="transportType">
+            <option value="">-- Select Product --</option>
+          </select>
+          <span class="field-saved-indicator">✅ Saved</span>
+        </div>
+
+        <!-- Pickup -->
+        <div class="form-field">
+          <label class="form-label" for="sourceLocationDisplay">Pickup Location</label>
+          <div class="custom-dropdown" id="sourceDropdown">
+            <div class="custom-dropdown-display" tabindex="0" id="sourceLocationDisplay">
+              <span class="label-text">-- Select Source Location --</span>
+              <span class="clear-selection" title="Clear">&times;</span>
+            </div>
+            <div class="custom-dropdown-list" id="sourceDropdownList">
+              <input type="text" class="custom-dropdown-search" placeholder="Type to filter..." />
+              <div class="custom-dropdown-options"></div>
+            </div>
+            <input type="hidden" id="sourceLocation" name="sourceLocation" value="" />
+          </div>
+          <span class="field-saved-indicator">✅ Saved</span>
+        </div>
+
+        <!-- Delivery -->
+        <div class="form-field">
+          <label class="form-label" for="destinationLocationDisplay">Delivery Location</label>
+          <div class="custom-dropdown" id="destinationDropdown">
+            <div class="custom-dropdown-display" tabindex="0" id="destinationLocationDisplay">
+              <span class="location-text">-- Select Destination Location --</span>
+              <span class="clear-selection-dest" title="Clear">&times;</span>
+            </div>
+            <div class="custom-dropdown-list" id="destinationDropdownList">
+              <input type="text" class="custom-dropdown-search" placeholder="Type to filter..." />
+              <div class="custom-dropdown-options"></div>
+            </div>
+            <input type="hidden" id="destinationLocation" name="destinationLocation" value="" />
+          </div>
+          <span class="field-saved-indicator">✅ Saved</span>
+        </div>
+
+        <!-- Product -->
+        <div class="form-field">
+          <label class="form-label" for="product">Product</label>
+          <select class="form-select" id="product">
+            <option value="">-- Select Product --</option>
+          </select>
+          <span class="field-saved-indicator">✅ Saved</span>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="estimated">Estimated m³ Hauled</label>
+          <input class="form-input" id="estimated" type="number" min="0" step="0.1" inputmode="decimal" autocomplete="off" />
+          <span class="field-saved-indicator">✅ Saved</span>
+        </div>
+
+        <div class="form-comments">
+          <label class="comments-label" for="ticket-comments">Job Comments</label>
+          <textarea class="comments-area" id="ticket-comments" placeholder="Add comments..."></textarea>
+          <span class="field-saved-indicator">✅ Saved</span>
+        </div>
+
+        <button id="saveTicketBtn" class="axle-btn" type="button" style="margin-top:18px;">Save</button>
+
       </div>
-
-      <div class="form-field">
-        <label class="form-label" for="driver">Driver <span class="required-star">*</span></label>
-        <select class="form-select" id="driver"></select>
-      </div>
-
-      <!-- Paste all other form fields, dropdowns, comments area etc. here -->
-      <!-- Keep EXACT same IDs as VF -->
-      <!-- Keep hidden inputs too -->
-
-      <button id="saveTicketBtn" class="axle-btn" type="button">Save</button>
-
     </div>
   </div>
-</div>
-<!-- ==== END: Your VF form markup ==== -->
 
-<!-- Scripts -->
-<script src="assets/choices.min.js"></script>
-<script type="module" src="scripts/app.js"></script>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js");
-}
-</script>
+  <!-- Hidden fields (values blank for offline shell) -->
+  <input type="hidden" id="userContactId" value="" />
+  <input type="hidden" id="ticketId" value="" />
+  <input type="hidden" id="ticketNameRaw" value="" />
+  <input type="hidden" id="ticketType" value="" />
+  <input type="hidden" id="ticketNumberLabel" name="ticketNumberLabel" />
+  <input type="hidden" id="ticketNumber" name="ticketNumber" />
 
+  <input type="hidden" id="defaultWorkforce" value="" />
+  <input type="hidden" id="defaultDriver" value="" />
+  <input type="hidden" id="defaultPowerUnit" value="" />
+  <input type="hidden" id="defaultTrailerUnit" value="" />
+  <input type="hidden" id="defaultSecondaryTrailerUnit" value="" />
+  <input type="hidden" id="originalETicketId" value="" />
+  <input type="hidden" id="existingETicketId" value="" />
+  <input type="hidden" id="defaultDate" value="" />
+  <input type="hidden" id="defaultProduct" value="" />
+  <input type="hidden" id="defaultEstimated" value="" />
+  <input type="hidden" id="defaultComments" value="" />
+  <input type="hidden" id="defaultAxleType" value="" />
+  <input type="hidden" id="defaultTransportType" value="" />
+  <input type="hidden" id="defaultSourceLocation" value="" />
+  <input type="hidden" id="defaultDestinationLocation" value="" />
+  <input type="hidden" id="defaultConsignor" value="" />
+  <input type="hidden" id="defaultConsignee" value="" />
+  <input type="hidden" id="consignor" name="consignor" value="" />
+  <input type="hidden" id="consignee" name="consignee" value="" />
+
+  <!-- ===== END: Form ===== -->
+
+  <!-- Scripts -->
+  <script src="assets/choices.min.js"></script>
+  <script>
+    // Minimal offline toggles to mimic VF behavior (no server calls)
+    document.addEventListener('DOMContentLoaded', function () {
+      const net = document.getElementById('net-status');
+      const setNet = () => net && (net.textContent = navigator.onLine ? 'Online' : 'Offline — will sync later');
+      window.addEventListener('online', setNet);
+      window.addEventListener('offline', setNet);
+      setNet();
+
+      // Toggle paper/electronic
+      const toggles = document.querySelectorAll('.toggle-btn');
+      const paperBox = document.getElementById('paperExtraBox');
+      const electronicBox = document.getElementById('electronicExtraBox');
+      toggles.forEach(btn => {
+        btn.addEventListener('click', () => {
+          toggles.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const showPaper = btn.dataset.type === 'paper';
+          if (paperBox && electronicBox) {
+            paperBox.style.display = showPaper ? 'block' : 'none';
+            electronicBox.style.display = showPaper ? 'none' : 'block';
+          }
+        });
+      });
+
+      // Choices init (optional)
+      document.querySelectorAll('#ticket-vf .form-select').forEach((sel) => {
+        // eslint-disable-next-line no-undef
+        new Choices(sel, { shouldSort: false, searchEnabled: true, itemSelectText: '' });
+      });
+
+      // Fake options so page is interactive offline (replace later with cached JSON)
+      const seed = (selId, vals) => {
+        const el = document.getElementById(selId);
+        if (!el) return;
+        el.innerHTML = '<option value="">-- Select --</option>' + vals.map(([v,t]) => `<option value="${v}">${t}</option>`).join('');
+        el.removeAttribute('disabled');
+      };
+      seed('workforce', [['a1','Workforce A'],['b2','Workforce B']]);
+      seed('driver', [['d1','Driver 1'],['d2','Driver 2']]);
+      seed('transportType', [['t1','Service 1'],['t2','Service 2']]);
+      seed('product', [['p1','Product 1'],['p2','Product 2']]);
+
+      // Save button (hooks into Step 4+ logic later)
+      const saveBtn = document.getElementById('saveTicketBtn');
+      saveBtn?.addEventListener('click', () => {
+        alert('Saved locally (Step 4 will wire real offline queue + sync).');
+      });
+    });
+
+    // Register SW on this page too
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(()=>{});
+    }
+  </script>
 </body>
 </html>
