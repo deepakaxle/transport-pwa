@@ -1,7 +1,8 @@
 {
   "name": "Axle Transport Ticket",
   "short_name": "Transport",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#141414",
   "theme_color": "#141414",
@@ -10,3 +11,4 @@
     { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
+
