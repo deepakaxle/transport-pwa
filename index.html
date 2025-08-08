@@ -572,8 +572,8 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ---- service worker (relative path for GitHub Pages) ---- */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js")
-    .then(reg => console.log("✅ Service Worker registered with scope:", reg.scope))
-    .catch(err => console.error("❌ Service Worker registration failed:", err));
+    .then(r => console.log("SW registered:", r.scope))
+    .catch(e => console.error("SW register failed:", e));
 }
 </script>
 
