@@ -269,62 +269,311 @@
 
   <!-- ===== END: Form ===== -->
 
-  <!-- Scripts -->
-  <script src="assets/choices.min.js"></script>
-  <script>
-    // Minimal offline toggles to mimic VF behavior (no server calls)
-    document.addEventListener('DOMContentLoaded', function () {
-      const net = document.getElementById('net-status');
-      const setNet = () => net && (net.textContent = navigator.onLine ? 'Online' : 'Offline — will sync later');
-      window.addEventListener('online', setNet);
-      window.addEventListener('offline', setNet);
-      setNet();
+  <script src="./assets/choices.min.js"></script>
+<script>
+/* ========= OFFLINE-ONLY FORM SCRIPT (no server calls) ========= */
 
-      // Toggle paper/electronic
-      const toggles = document.querySelectorAll('.toggle-btn');
-      const paperBox = document.getElementById('paperExtraBox');
-      const electronicBox = document.getElementById('electronicExtraBox');
-      toggles.forEach(btn => {
-        btn.addEventListener('click', () => {
-          toggles.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const showPaper = btn.dataset.type === 'paper';
-          if (paperBox && electronicBox) {
-            paperBox.style.display = showPaper ? 'block' : 'none';
-            electronicBox.style.display = showPaper ? 'none' : 'block';
-          }
-        });
-      });
+/* ---- tiny utilities ---- */
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+const on = (el, ev, fn) => el && el.addEventListener(ev, fn);
+const setText = (el, txt) => { if (el) el.textContent = txt; };
 
-      // Choices init (optional)
-      document.querySelectorAll('#ticket-vf .form-select').forEach((sel) => {
-        // eslint-disable-next-line no-undef
-        new Choices(sel, { shouldSort: false, searchEnabled: true, itemSelectText: '' });
-      });
+/* ---- network banner ---- */
+function setNetStatus() {
+  const net = $('#net-status');
+  setText(net, navigator.onLine ? 'Online' : 'Offline — will sync later');
+}
+window.addEventListener('online', setNetStatus);
+window.addEventListener('offline', setNetStatus);
 
-      // Fake options so page is interactive offline (replace later with cached JSON)
-      const seed = (selId, vals) => {
-        const el = document.getElementById(selId);
-        if (!el) return;
-        el.innerHTML = '<option value="">-- Select --</option>' + vals.map(([v,t]) => `<option value="${v}">${t}</option>`).join('');
-        el.removeAttribute('disabled');
-      };
-      seed('workforce', [['a1','Workforce A'],['b2','Workforce B']]);
-      seed('driver', [['d1','Driver 1'],['d2','Driver 2']]);
-      seed('transportType', [['t1','Service 1'],['t2','Service 2']]);
-      seed('product', [['p1','Product 1'],['p2','Product 2']]);
+/* ---- paper / electronic toggle ---- */
+function initTicketTypeToggle() {
+  const toggles = $$('.toggle-btn');
+  const paperBox = $('#paperExtraBox');
+  const electronicBox = $('#electronicExtraBox');
 
-      // Save button (hooks into Step 4+ logic later)
-      const saveBtn = document.getElementById('saveTicketBtn');
-      saveBtn?.addEventListener('click', () => {
-        alert('Saved locally (Step 4 will wire real offline queue + sync).');
-      });
+  toggles.forEach(btn => {
+    on(btn, 'click', () => {
+      toggles.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const showPaper = btn.dataset.type === 'paper';
+      if (paperBox && electronicBox) {
+        paperBox.style.display = showPaper ? 'block' : 'none';
+        electronicBox.style.display = showPaper ? 'none' : 'block';
+      }
+      const ticketType = $('#ticketType');
+      if (ticketType) {
+        ticketType.value = showPaper ? 'Paper Ticket' : 'eTicket';
+      }
+      markChanged();
     });
+  });
+}
 
-    // Register SW on this page too
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(()=>{});
+/* ---- Choices.js on selects ---- */
+function initChoices() {
+  $$('#ticket-vf .form-select').forEach(sel => {
+    // eslint-disable-next-line no-undef
+    new Choices(sel, { shouldSort: false, searchEnabled: true, itemSelectText: '' });
+  });
+}
+
+/* ---- seed offline options (replace with cached JSON later) ---- */
+const seedData = {
+  workforces: [['wf1','Workforce A'],['wf2','Workforce B']],
+  drivers: [['d1','Driver 1'],['d2','Driver 2']],
+  services: [['svc1','Gravel Haul'],['svc2','Topsoil']],
+  products: [['p1','Gravel'],['p2','Sand']],
+  powerUnits: [['pu1','PU-101'],['pu2','PU-202']],
+  trailerUnits: [['tr1','TR-11'],['tr2','TR-22']],
+  locations: [
+    ['loc1','Pit Alpha','acct1','Alpha Co'],
+    ['loc2','Site Bravo','acct2','Bravo Ltd'],
+    ['loc3','Yard Charlie','acct3','Charlie Inc']
+  ],
+  eTickets: [['ET-0001','ET-0001'],['ET-0002','ET-0002']]
+};
+
+function seedSelect(id, rows) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '<option value="">-- Select --</option>' + rows.map(([v,t]) => `<option value="${v}">${t}</option>`).join('');
+  el.removeAttribute('disabled');
+}
+
+/* ---- axle buttons ---- */
+function initAxleButtons() {
+  const buttons = $$('#ticket-vf .axle-btn');
+  buttons.forEach(btn => {
+    on(btn, 'click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      markChanged();
+    });
+  });
+}
+
+/* ==== Custom searchable dropdown helpers (Power/Trailer/Source/Destination) ==== */
+function makeSearchableDropdown(rootId, displayId, listId, hiddenId, optionsArr, {
+  labelKey = 'label',
+  valueKey = 'value',
+  clearSelector = null, // e.g. '.clear-selection'
+  onSelect = null       // callback({value,label})
+} = {}) {
+  const dropdown = document.getElementById(rootId);
+  if (!dropdown) return;
+
+  const display = document.getElementById(displayId);
+  const list = document.getElementById(listId);
+  const search = list.querySelector('.custom-dropdown-search');
+  const optsDiv = list.querySelector('.custom-dropdown-options');
+  const hidden = document.getElementById(hiddenId);
+  const clearBtn = clearSelector ? $(clearSelector, dropdown) : null;
+
+  let options = optionsArr.map(o => (Array.isArray(o) ? { [valueKey]: o[0], [labelKey]: o[1] } : o));
+
+  function render(filter = '') {
+    const f = filter.toLowerCase();
+    const filtered = options.filter(o => String(o[labelKey]).toLowerCase().includes(f));
+    optsDiv.innerHTML = '';
+    if (!filtered.length) {
+      const div = document.createElement('div');
+      div.className = 'custom-dropdown-option';
+      div.textContent = 'No results found';
+      div.style.opacity = '0.7';
+      div.style.cursor = 'default';
+      optsDiv.appendChild(div);
+      return;
     }
-  </script>
+    filtered.forEach(o => {
+      const div = document.createElement('div');
+      div.className = 'custom-dropdown-option';
+      div.textContent = o[labelKey];
+      on(div, 'click', () => select(o));
+      optsDiv.appendChild(div);
+    });
+  }
+
+  function open() {
+    list.classList.add('show');
+    search.value = '';
+    render('');
+    setTimeout(() => search.focus(), 80);
+  }
+  function close() { list.classList.remove('show'); }
+
+  function select(o) {
+    display.querySelector('.label-text')?.remove(); // scenario for location display
+    display.textContent = o[labelKey];
+    hidden.value = o[valueKey];
+    close();
+    if (clearBtn) clearBtn.style.display = 'inline';
+    if (onSelect) onSelect(o);
+    markChanged();
+    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function clearSelection() {
+    if (displayId === 'sourceLocationDisplay') {
+      display.innerHTML = `<span class="label-text">-- Select Source Location --</span><span class="clear-selection" title="Clear">&times;</span>`;
+    } else if (displayId === 'destinationLocationDisplay') {
+      display.innerHTML = `<span class="location-text">-- Select Destination Location --</span><span class="clear-selection-dest" title="Clear">&times;</span>`;
+    } else {
+      display.textContent = '-- Select --';
+    }
+    hidden.value = '';
+    close();
+    if (clearBtn) clearBtn.style.display = 'none';
+    markChanged();
+    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  on(display, 'click', (e) => { open(); e.stopPropagation(); });
+  on(search, 'input', () => render(search.value));
+  on(document, 'click', (e) => { if (!dropdown.contains(e.target)) close(); });
+  if (clearBtn) on(clearBtn, 'click', (e) => { e.stopPropagation(); clearSelection(); });
+
+  // public API
+  return { render, select, clearSelection };
+}
+
+/* ---- custom dropdown initializers ---- */
+function initCustomDropdowns() {
+  // Power Unit
+  makeSearchableDropdown('powerUnitDropdown','powerUnitDisplay','powerUnitDropdownList','powerUnit', seedData.powerUnits);
+
+  // Trailer
+  const trailer = makeSearchableDropdown('trailerUnitDropdown','trailerUnitDisplay','trailerUnitDropdownList','trailerUnit', seedData.trailerUnits);
+
+  // Secondary Trailer excludes the selected primary
+  function getSecondaryOptions() {
+    const primary = $('#trailerUnit')?.value;
+    return seedData.trailerUnits.filter(([v]) => v !== primary);
+  }
+  let secondary = makeSearchableDropdown('secondaryTrailerUnitDropdown','secondaryTrailerUnitDisplay','secondaryTrailerUnitDropdownList','secondaryTrailerUnit', getSecondaryOptions());
+  on($('#trailerUnit'), 'change', () => {
+    // rebuild secondary when primary changes
+    secondary = makeSearchableDropdown('secondaryTrailerUnitDropdown','secondaryTrailerUnitDisplay','secondaryTrailerUnitDropdownList','secondaryTrailerUnit', getSecondaryOptions());
+  });
+
+  // Locations: build objects w/ company linkage (like your VF maps)
+  const locOptions = seedData.locations.map(([id, label, companyId, companyName]) => ({
+    value: id, label, companyId, companyName
+  }));
+
+  // Source
+  makeSearchableDropdown(
+    'sourceDropdown','sourceLocationDisplay','sourceDropdownList','sourceLocation',
+    locOptions,
+    {
+      clearSelector: '.clear-selection',
+      onSelect: (o) => {
+        // If you had a visible Consignor select, set it here. We store in hidden for now.
+        const consignorHidden = $('#consignor');
+        if (consignorHidden) consignorHidden.value = o.companyId || '';
+      }
+    }
+  );
+
+  // Destination
+  makeSearchableDropdown(
+    'destinationDropdown','destinationLocationDisplay','destinationDropdownList','destinationLocation',
+    locOptions,
+    {
+      clearSelector: '.clear-selection-dest',
+      onSelect: (o) => {
+        const consigneeHidden = $('#consignee');
+        if (consigneeHidden) consigneeHidden.value = o.companyId || '';
+      }
+    }
+  );
+}
+
+/* ---- mark changed (for border color animation classes you use) ---- */
+let saveTimer;
+function markChanged() {
+  // add a subtle “typing → finished → saved” animation to current field
+  // (lightweight version; real animation is already in your CSS)
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    // noop — in Step 4 we’ll call save here (debounced)
+  }, 600);
+}
+
+/* ---- collect form data & local save (Step 3 only) ---- */
+function normalizeId(v){ return v && String(v).trim() !== '' ? String(v).trim() : null; }
+function collectFormData() {
+  const g = (id) => document.getElementById(id);
+  return {
+    ticketId: normalizeId(g('ticketId')?.value),
+    workforce: normalizeId(g('workforce')?.value),
+    driver: normalizeId(g('driver')?.value),
+    powerUnit: normalizeId(g('powerUnit')?.value),
+    trailerUnit: normalizeId(g('trailerUnit')?.value),
+    secondaryTrailerUnit: normalizeId(g('secondaryTrailerUnit')?.value),
+    transportType: normalizeId(g('transportType')?.value),
+    consignor: normalizeId(g('consignor')?.value),
+    consignee: normalizeId(g('consignee')?.value),
+    product: normalizeId(g('product')?.value),
+    estimated: normalizeId(g('estimated')?.value),
+    comments: g('ticket-comments')?.value || '',
+    sourceLocation: normalizeId(g('sourceLocation')?.value),
+    destinationLocation: normalizeId(g('destinationLocation')?.value),
+    ticketNumber: normalizeId(g('ticketNumber')?.value),
+    electronicTicketId: normalizeId(g('electronicTicketNum')?.value),
+    ticketType: normalizeId(g('ticketType')?.value),
+    enterPaperTicket: (g('paperTicketNum')?.value || '').trim()
+  };
+}
+function saveLocal() {
+  const data = collectFormData();
+  const key = 'transport-offline-draft';
+  localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
+  alert('Saved locally.\n(Next step will add offline queue + Salesforce sync.)');
+}
+
+/* ---- attach events to inputs for autosave later ---- */
+function bindInputAutosave() {
+  const handler = () => markChanged();
+  $$('#ticket-vf input:not([type="hidden"]), #ticket-vf select, #ticket-vf textarea')
+    .forEach(el => {
+      on(el, 'input', handler);
+      on(el, 'change', handler);
+    });
+}
+
+/* ---- boot ---- */
+document.addEventListener('DOMContentLoaded', () => {
+  setNetStatus();
+  initTicketTypeToggle();
+  initAxleButtons();
+
+  // seed normal selects
+  seedSelect('workforce', seedData.workforces);
+  seedSelect('driver', seedData.drivers);
+  seedSelect('transportType', seedData.services);
+  seedSelect('product', seedData.products);
+  // eTicket select
+  const etSel = $('#electronicTicketNum');
+  if (etSel) {
+    etSel.innerHTML = '<option value="">-- Select Electronic Ticket --</option>' +
+      seedData.eTickets.map(([v,t]) => `<option value="${v}">${t}</option>`).join('');
+  }
+
+  initChoices();
+  initCustomDropdowns();
+  bindInputAutosave();
+
+  // save button
+  on($('#saveTicketBtn'), 'click', saveLocal);
+});
+
+/* ---- service worker (relative path for GitHub Pages) ---- */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+
 </body>
 </html>
